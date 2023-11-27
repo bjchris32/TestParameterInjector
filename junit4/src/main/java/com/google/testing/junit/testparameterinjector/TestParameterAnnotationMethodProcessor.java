@@ -1052,13 +1052,17 @@ final class TestParameterAnnotationMethodProcessor implements TestMethodProcesso
             new ArrayList<>(testParameterValuesForFieldInjection);
         for (Field declaredField :
             FluentIterable.from(listWithParents(testInstance.getClass()))
-                .transformAndConcat(c -> Arrays.asList(c.getDeclaredFields()))
+                .transformAndConcat(
+                    c -> {
+                      Field[] declaredFields = c.getDeclaredFields();
+                      Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+                      return Arrays.asList(declaredFields);
+                    })
                 .toList()) {
           for (TestParameterValueHolder testParameterValue :
               remainingTestParameterValuesForFieldInjection) {
             if (declaredField.isAnnotationPresent(
-                testParameterValue.annotationTypeOrigin().annotationType()) &&
-                declaredField.getName() == testParameterValue.paramName().get()) {
+                testParameterValue.annotationTypeOrigin().annotationType())) {
               declaredField.setAccessible(true);
               declaredField.set(testInstance, testParameterValue.unwrappedValue());
               remainingTestParameterValuesForFieldInjection.remove(testParameterValue);
