@@ -320,7 +320,12 @@ final class TestParameterAnnotationMethodProcessor implements TestMethodProcesso
     List<AnnotationTypeOrigin> fieldAnnotations =
         extractTestParameterAnnotations(
             FluentIterable.from(listWithParents(testClass))
-                .transformAndConcat(c -> Arrays.asList(c.getDeclaredFields()))
+                .transformAndConcat(
+                    c -> {
+                      Field[] declaredFields = c.getDeclaredFields();
+                      Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+                      return Arrays.asList(declaredFields);
+                    })
                 .transformAndConcat(field -> Arrays.asList(field.getAnnotations()))
                 .toList(),
             Origin.FIELD);
@@ -924,7 +929,12 @@ final class TestParameterAnnotationMethodProcessor implements TestMethodProcesso
       List<AnnotationWithMetadata> annotations =
           new ArrayList<>(
               FluentIterable.from(listWithParents(testClass))
-                  .transformAndConcat(c -> Arrays.asList(c.getDeclaredFields()))
+                  .transformAndConcat(
+                      c -> {
+                        Field[] declaredFields = c.getDeclaredFields();
+                        Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+                        return Arrays.asList(declaredFields);
+                      })
                   .transformAndConcat(
                       field ->
                           FluentIterable.from(
@@ -1042,7 +1052,12 @@ final class TestParameterAnnotationMethodProcessor implements TestMethodProcesso
             new ArrayList<>(testParameterValuesForFieldInjection);
         for (Field declaredField :
             FluentIterable.from(listWithParents(testInstance.getClass()))
-                .transformAndConcat(c -> Arrays.asList(c.getDeclaredFields()))
+                .transformAndConcat(
+                    c -> {
+                      Field[] declaredFields = c.getDeclaredFields();
+                      Arrays.sort(declaredFields, Comparator.comparing(Field::getName));
+                      return Arrays.asList(declaredFields);
+                    })
                 .toList()) {
           for (TestParameterValueHolder testParameterValue :
               remainingTestParameterValuesForFieldInjection) {
@@ -1275,7 +1290,9 @@ final class TestParameterAnnotationMethodProcessor implements TestMethodProcesso
   private ImmutableList<Method> getMethodsIncludingParents(Class<?> clazz) {
     ImmutableList.Builder<Method> resultBuilder = ImmutableList.builder();
     while (clazz != null) {
-      resultBuilder.add(clazz.getDeclaredMethods());
+      Method[] declaredMethods = clazz.getDeclaredMethods();
+      Arrays.sort(declaredMethods, Comparator.comparing(Method::getName));
+      resultBuilder.add(declaredMethods);
       clazz = clazz.getSuperclass();
     }
     return resultBuilder.build();
